@@ -8,7 +8,9 @@ Route::get('/', function () {
 });
 
 Route::get("/bibliotecas", [BibliotecasController::class, 'index'])->name("bibliotecas.index");
-Route::get("/bibliotecas/create", [BibliotecasController::class, 'store'])->name("bibliotecas.create");
-Route::get("/bibliotecas/update/{id}", [BibliotecasController::class, 'update'])->name("bibliotecas.update");
-Route::get("/bibliotecas/delete", [BibliotecasController::class, 'destroy'])->name("bibliotecas.destroy");
+Route::get("/bibliotecas/new", [BibliotecasController::class, 'create'])->name("bibliotecas.create");
+Route::post("/bibliotecas/create", [BibliotecasController::class, 'store'])->name("bibliotecas.store");
+Route::get("/bibliotecas/edit/{id}", [BibliotecasController::class, 'edit'])->name("bibliotecas.edit");
+Route::put("/bibliotecas/update/{id}", [BibliotecasController::class, 'update'])->name("bibliotecas.update");
+Route::delete("/bibliotecas/delete/{id}", [BibliotecasController::class, 'destroy'])->name("bibliotecas.destroy");
 

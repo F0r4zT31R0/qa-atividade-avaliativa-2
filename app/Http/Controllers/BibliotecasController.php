@@ -14,9 +14,20 @@ class BibliotecasController extends Controller
         $busca = $request->input('nome');
 
         $bibliotecas = Biblioteca::where('nome', 'like', '%' . $busca . '%')->get();
-    
+
         return view('bibliotecas.index', ['bibliotecas' => $bibliotecas]);
     }
+
+
+    public function create()
+    {
+        //
+
+        $users = \App\Models\User::all();
+
+        return view('bibliotecas.new', compact('users'));
+    }
+
 
     public function store(Request $request)
     {
@@ -32,16 +43,28 @@ class BibliotecasController extends Controller
             ]);
 
             $biblioteca->endereco = $endereco;
-        
+
             $biblioteca->save();
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Erro ao criar a biblioteca: Verifique as informações enviadas'], 500);
+            return view('bibliotecas.new', ['error' => 'Erro ao criar a biblioteca: Verifique as informações enviadas']);
         }
-        return response()->json($biblioteca, 201);
+        return redirect()->route('bibliotecas.index')->with('message', 'Biblioteca criada com sucesso');
 
     }
 
-    public function update(Request $request, $id)
+
+    public function edit(int $id)
+    {
+        //
+        $biblioteca = Biblioteca::find($id);
+        if (!$biblioteca) {
+            return view('bibliotecas.new', ['error' => 'Biblioteca não encontrada']);
+        }
+        return view('bibliotecas.new', ['biblioteca' => $biblioteca]);
+    }
+
+
+    public function update(Request $request, int $id)
     {
         //
 
@@ -56,7 +79,7 @@ class BibliotecasController extends Controller
         }
 
         try {
-  
+
             if (!is_null($created_by) && !empty($created_by)) {
                 $biblioteca->created_by = $created_by;
             }
@@ -72,24 +95,19 @@ class BibliotecasController extends Controller
 
             $biblioteca->save();
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Erro ao atualizar a biblioteca: Verifique as informações enviadas'], 500);
+            return view('bibliotecas.new', ['error' => 'Erro ao atualizar a biblioteca: Verifique as informações enviadas']);
         }
 
-
-        return response()->json($biblioteca, 200);
-
+        return redirect()->route('bibliotecas.index')->with('message', 'Biblioteca atualizada com sucesso');
 
     }
 
 
-
-    public function destroy(Request $request)
+    public function destroy(int $id)
     {
         //
 
-        $idBiblioteca = $request->input("id");
-
-        $biblioteca = Biblioteca::find($idBiblioteca);
+        $biblioteca = Biblioteca::find($id);
         if (!$biblioteca) {
             return response()->json(['error' => 'Biblioteca não encontrada'], 404);
         }
@@ -97,10 +115,10 @@ class BibliotecasController extends Controller
         try {
             $biblioteca->delete();
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Erro ao excluir a biblioteca: Verifique o ID'], 500);
+            return redirect()->route('bibliotecas.index')->with('message', 'Erro ao excluir a biblioteca: Verifique o ID');
         }
 
-        return response()->json(['message' => 'Biblioteca excluída com sucesso'], 200);
+        return redirect()->route('bibliotecas.index')->with('message', 'Biblioteca excluída com sucesso');
 
     }
 

@@ -1,3 +1,12 @@
+
+@if (session('message'))
+<div class="alert"></div>
+    {{ session('message') }}
+</div>
+@endif
+
+<a href="{{ route('bibliotecas.create') }}">Criar Nova Biblioteca</a>
+
 <table>
     <thead>
         <tr>
@@ -15,7 +24,7 @@
         @foreach ($bibliotecas as $biblioteca)
             <tr>
                 <td>{{ $biblioteca->id }}</td>
-                <td>{{ $biblioteca->created_by }}</td>
+                <td>{{ $biblioteca->creator->name }}</td>
                 <td>{{ $biblioteca->nome }}</td>
                 <td>{{ $biblioteca->endereco }}</td>
                 <td>{{ $biblioteca->telefone }}</td>
