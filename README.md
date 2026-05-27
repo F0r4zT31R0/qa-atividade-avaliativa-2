@@ -1,3 +1,44 @@
+
+# Executar ambiente localhost
+
+### Construir imagem docker
+```
+docker compose build --no-cache
+```
+
+### Iniciar todo o ambiente
+```
+docker compose up
+```
+
+### Parar todo o ambiente
+```
+docker compose down
+```
+
+### Ver logs em tempo real
+```
+docker compose logs -f app_laravel
+```
+
+### Executar command no artisan
+```
+docker compose exec app_laravel php artisan 
+<comando>
+```
+Exemplos: 
+```
+docker compose exec app_laravel php artisan migrate
+
+docker compose exec app_laravel php artisan migrate:rollback
+```
+
+
+
+
+
+
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
