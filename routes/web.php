@@ -26,4 +26,5 @@ Route::resource('users', UserController::class);
 Route::resource('pessoas', PessoaController::class);
 
 Route::resource('livros', LivroController::class);
-Route::resource('autores', AutorController::class);
+Route::resource('autores', AutorController::class)->except('edit');
+Route::get("/autores/edit/{id}", [AutorController::class, 'edit'])->name("autores.edit");
