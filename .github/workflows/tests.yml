@@ -1,0 +1,41 @@
+name: Testes de Integração
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  tests:
+    name: PHPUnit - Laravel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite
+          coverage: xdebug
+
+      - name: Copiar .env de exemplo
+        run: cp .env.example .env
+
+      - name: Instalar dependências do Composer
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Gerar chave da aplicação
+        run: php artisan key:generate
+
+      - name: Executar migrations (SQLite em memória)
+        run: php artisan migrate --env=testing --force
+
+      - name: Executar testes com cobertura
+        run: php artisan test --coverage --min=50
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
