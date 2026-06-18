@@ -6,6 +6,13 @@ use App\Models\Autor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Testes atualizados após correção do AutorController pelo professor.
+ * O método edit() agora retorna corretamente a view 'autores.edit'.
+ *
+ * BUG REMANESCENTE: Autor::$fillable ainda contém 'sobrenome',
+ * campo que não existe na tabela autores do banco de dados.
+ */
 class AutorControllerTest extends TestCase
 {
     use RefreshDatabase;
@@ -77,6 +84,7 @@ class AutorControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('autores.index'));
+        $this->assertDatabaseHas('autores', ['nome' => 'Autor com Data']);
     }
 
     public function test_store_rejeita_data_nascimento_invalida(): void
@@ -102,12 +110,13 @@ class AutorControllerTest extends TestCase
 
     // ─── EDIT ─────────────────────────────────────────────────────────────────
 
-    public function test_edit_retorna_view_para_autor_existente(): void
+    public function test_edit_retorna_view_correta_para_autor_existente(): void
     {
         $autor = Autor::factory()->create();
 
         $response = $this->get(route('autores.edit', $autor->id));
 
+        // CORREÇÃO: professor corrigiu para retornar 'autores.edit'
         $response->assertStatus(200)
             ->assertViewIs('autores.edit')
             ->assertViewHas('autor', fn($a) => $a->id === $autor->id);

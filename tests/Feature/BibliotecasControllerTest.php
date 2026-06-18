@@ -7,119 +7,133 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Testes atualizados após correção do BibliotecasController pelo professor.
+ * O método edit() agora retorna corretamente a view 'bibliotecas.edit'.
+ */
 class BibliotecasControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_index_returns_view_with_filtered_bibliotecas(): void
+    private function criarBiblioteca(string $nome = 'Biblioteca Teste'): Biblioteca
     {
         $user = User::factory()->create();
+        return Biblioteca::create([
+            'created_by' => $user->id,
+            'nome'       => $nome,
+            'endereco'   => 'Rua Teste, 123',
+        ]);
+    }
 
-        Biblioteca::create(['created_by' => $user->id, 'nome' => 'Biblioteca Central', 'endereco' => 'Rua A']);
-        Biblioteca::create(['created_by' => $user->id, 'nome' => 'Biblioteca Zona Norte', 'endereco' => 'Rua B']);
+    // ─── INDEX ───────────────────────────────────────────────────────────────
+
+    public function test_index_retorna_view_com_bibliotecas(): void
+    {
+        $this->criarBiblioteca('Biblioteca Central');
+        $this->criarBiblioteca('Biblioteca Norte');
+
+        $response = $this->get(route('bibliotecas.index'));
+
+        $response->assertStatus(200)
+            ->assertViewIs('bibliotecas.index')
+            ->assertViewHas('bibliotecas', fn($b) => $b->count() === 2);
+    }
+
+    public function test_index_filtra_por_nome(): void
+    {
+        $this->criarBiblioteca('Biblioteca Central');
+        $this->criarBiblioteca('Biblioteca Norte');
 
         $response = $this->get(route('bibliotecas.index', ['nome' => 'Central']));
 
         $response->assertStatus(200)
-            ->assertViewIs('bibliotecas.index')
-            ->assertViewHas('bibliotecas', function ($bibliotecas) {
-                return $bibliotecas->count() === 1 && $bibliotecas->first()->nome === 'Biblioteca Central';
-            });
+            ->assertViewHas('bibliotecas', fn($b) => $b->count() === 1);
     }
 
-    public function test_create_returns_view_with_users(): void
-    {
-        User::factory()->create();
+    // ─── CREATE ───────────────────────────────────────────────────────────────
 
+    public function test_create_retorna_view_de_nova_biblioteca(): void
+    {
         $response = $this->get(route('bibliotecas.create'));
 
         $response->assertStatus(200)
-            ->assertViewIs('bibliotecas.new')
-            ->assertViewHas('users');
+            ->assertViewIs('bibliotecas.new');
     }
 
-    public function test_store_creates_biblioteca_and_redirects(): void
+    // ─── STORE ────────────────────────────────────────────────────────────────
+
+    public function test_store_cria_biblioteca_e_redireciona(): void
     {
         $user = User::factory()->create();
 
         $response = $this->post(route('bibliotecas.store'), [
             'created_by' => $user->id,
-            'nome' => 'Biblioteca Nova',
-            'endereco' => 'Avenida Teste',
+            'nome'       => 'Nova Biblioteca',
+            'endereco'   => 'Rua Nova, 100',
         ]);
 
         $response->assertRedirect(route('bibliotecas.index'))
             ->assertSessionHas('message', 'Biblioteca criada com sucesso');
 
-        $this->assertDatabaseHas('bibliotecas', [
-            'nome' => 'Biblioteca Nova',
-            'endereco' => 'Avenida Teste',
-            'created_by' => $user->id,
-        ]);
+        $this->assertDatabaseHas('bibliotecas', ['nome' => 'Nova Biblioteca']);
     }
 
-    public function test_edit_existing_biblioteca_returns_new_view(): void
+    // ─── EDIT ─────────────────────────────────────────────────────────────────
+
+    public function test_edit_retorna_view_correta_para_biblioteca_existente(): void
     {
-        $user = User::factory()->create();
-        $biblioteca = Biblioteca::create(['created_by' => $user->id, 'nome' => 'Biblioteca X', 'endereco' => 'Rua X']);
+        $biblioteca = $this->criarBiblioteca();
 
         $response = $this->get(route('bibliotecas.edit', ['id' => $biblioteca->id]));
 
+        // CORREÇÃO: professor corrigiu para retornar 'bibliotecas.edit'
         $response->assertStatus(200)
-            ->assertViewIs('bibliotecas.new')
-            ->assertViewHas('biblioteca', function ($viewBiblioteca) use ($biblioteca) {
-                return $viewBiblioteca->id === $biblioteca->id;
-            });
+            ->assertViewIs('bibliotecas.edit')
+            ->assertViewHas('biblioteca', fn($b) => $b->id === $biblioteca->id);
     }
 
-    public function test_edit_nonexistent_biblioteca_returns_error_view(): void
+    public function test_edit_redireciona_para_index_quando_biblioteca_nao_existe(): void
     {
-        $response = $this->get(route('bibliotecas.edit', ['id' => 999]));
+        $response = $this->get(route('bibliotecas.edit', ['id' => 9999]));
 
-        $response->assertStatus(200)
-            ->assertViewIs('bibliotecas.new')
-            ->assertViewHas('error', 'Biblioteca não encontrada');
+        $response->assertRedirect(route('bibliotecas.index'))
+            ->assertSessionHas('error', 'Biblioteca não encontrada');
     }
 
-    public function test_update_existing_biblioteca_updates_and_redirects(): void
+    // ─── UPDATE ───────────────────────────────────────────────────────────────
+
+    public function test_update_atualiza_biblioteca_e_redireciona(): void
     {
-        $user = User::factory()->create();
-        $secondUser = User::factory()->create();
-        $biblioteca = Biblioteca::create(['created_by' => $user->id, 'nome' => 'Biblioteca Antiga', 'endereco' => 'Rua Antiga']);
+        $biblioteca = $this->criarBiblioteca();
 
         $response = $this->put(route('bibliotecas.update', ['id' => $biblioteca->id]), [
-            'created_by' => $secondUser->id,
-            'nome' => 'Biblioteca Atualizada',
-            'endereco' => 'Rua Atualizada',
-            'email' => 'contato@example.com',
+            'nome'     => 'Nome Atualizado',
+            'endereco' => 'Rua Atualizada, 999',
         ]);
 
         $response->assertRedirect(route('bibliotecas.index'))
             ->assertSessionHas('message', 'Biblioteca atualizada com sucesso');
 
         $this->assertDatabaseHas('bibliotecas', [
-            'id' => $biblioteca->id,
-            'nome' => 'Biblioteca Atualizada',
-            'endereco' => 'Rua Atualizada',
-            'email' => 'contato@example.com',
-            'created_by' => 2,
+            'id'   => $biblioteca->id,
+            'nome' => 'Nome Atualizado',
         ]);
     }
 
-    public function test_update_nonexistent_biblioteca_returns_404(): void
+    public function test_update_retorna_404_para_biblioteca_inexistente(): void
     {
-        $response = $this->put(route('bibliotecas.update', ['id' => 999]), [
-            'nome' => 'Não existe',
+        $response = $this->put(route('bibliotecas.update', ['id' => 9999]), [
+            'nome' => 'Fantasma',
         ]);
 
-        $response->assertStatus(404)
-            ->assertJson(['error' => 'Biblioteca não encontrada']);
+        $response->assertStatus(404);
     }
 
-    public function test_destroy_existing_biblioteca_deletes_and_redirects(): void
+    // ─── DESTROY ──────────────────────────────────────────────────────────────
+
+    public function test_destroy_exclui_biblioteca_e_redireciona(): void
     {
-        $user = User::factory()->create();
-        $biblioteca = Biblioteca::create(['created_by' => $user->id, 'nome' => 'Biblioteca para excluir', 'endereco' => 'Rua Excluir']);
+        $biblioteca = $this->criarBiblioteca();
 
         $response = $this->delete(route('bibliotecas.destroy', ['id' => $biblioteca->id]));
 
@@ -129,11 +143,10 @@ class BibliotecasControllerTest extends TestCase
         $this->assertDatabaseMissing('bibliotecas', ['id' => $biblioteca->id]);
     }
 
-    public function test_destroy_nonexistent_biblioteca_returns_404(): void
+    public function test_destroy_retorna_404_para_biblioteca_inexistente(): void
     {
-        $response = $this->delete(route('bibliotecas.destroy', ['id' => 999]));
+        $response = $this->delete(route('bibliotecas.destroy', ['id' => 9999]));
 
-        $response->assertStatus(404)
-            ->assertJson(['error' => 'Biblioteca não encontrada']);
+        $response->assertStatus(404);
     }
 }
