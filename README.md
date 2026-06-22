@@ -87,7 +87,7 @@ Laravel's predictable structure and conventions make it ideal for AI coding agen
 composer require laravel/boost --dev
 
 php artisan boost:install
-```
+```curl -o TESTES.md https://raw.githubusercontent.com/F0r4zT31R0/qa-atividade-avaliativa-2/Teste-de-Integra%C3%A7%C3%A3o/TESTES.md
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
