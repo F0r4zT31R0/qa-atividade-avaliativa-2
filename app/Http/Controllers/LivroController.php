@@ -8,10 +8,12 @@ use App\Models\Autor;
 
 class LivroController extends Controller
 {
+    //
+
     public function index()
     {
         $livros = Livro::all();
-        return view("livros.index", compact("livros"));
+        return view('livros.index', compact('livros'));
     }
 
     public function show($id)
