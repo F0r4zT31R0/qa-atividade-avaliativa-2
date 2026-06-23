@@ -35,6 +35,11 @@ class LivroController extends Controller
         return redirect()->route('livros.index')
                          ->with('success', 'Livro criado com sucesso!');
     }
+    $request->validate([
+    'titulo' => 'required|string|max:255',
+    'autor_id' => 'required|exists:autores,id',
+]);
+
 
     // SHOW
     public function show($id)
@@ -61,6 +66,19 @@ class LivroController extends Controller
         $autores = Autor::all();
         return view('livros.edit', compact('livro', 'autores'));
     }
+    public function edit($id)
+{
+    $livro = Livro::find($id);
+
+    if (!$livro) {
+        return redirect()->route('livros.index')
+                         ->withErrors('Livro não encontrado');
+    }
+
+    $autores = Autor::all();
+    return view('livros.edit', compact('livro', 'autores'));
+}
+
 
     // UPDATE
     public function update(Request $request, $id)
