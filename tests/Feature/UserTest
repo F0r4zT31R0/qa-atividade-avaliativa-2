@@ -1,0 +1,88 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class UserTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /** @test */
+    public function criar_usuario_valido()
+    {
+        $response = $this->postJson('/api/users', [
+            'name' => 'Gabriel',
+            'email' => 'gabriel@example.com',
+            'password' => 'senhaSegura123'
+        ]);
+
+        $response->assertStatus(201)
+                 ->assertJsonStructure(['id', 'name', 'email']);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'gabriel@example.com'
+        ]);
+    }
+
+    /** @test */
+    public function criar_usuario_invalido()
+    {
+        $response = $this->postJson('/api/users', [
+            'name' => '',
+            'email' => 'email-invalido',
+            'password' => ''
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('users', [
+            'email' => 'email-invalido'
+        ]);
+    }
+
+    /** @test */
+    public function listar_usuarios()
+    {
+        $response = $this->getJson('/api/users');
+
+        $response->assertStatus(200)
+                 ->assertJsonStructure([
+                     '*' => ['id', 'name', 'email']
+                 ]);
+    }
+
+    /** @test */
+    public function atualizar_usuario()
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $response = $this->putJson("/api/users/{$user->id}", [
+            'name' => 'Novo Nome'
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJsonFragment(['name' => 'Novo Nome']);
+
+        $this->assertDatabaseHas('users', ['name' => 'Novo Nome']);
+    }
+
+    /** @test */
+    public function deletar_usuario()
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $response = $this->deleteJson("/api/users/{$user->id}");
+
+        $response->assertStatus(204);
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    /** @test */
+    public function buscar_usuario_inexistente()
+    {
+        $response = $this->getJson('/api/users/9999');
+
+        $response->assertStatus(404);
+    }
+}
